@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 genesis_block = {
-    "previous_hash": "",
+    "previous_hash": None,
     "index": 0,
+    "transactions": [],
+}
+fake_block = {
+    "previous_hash": "123",
+    "index": 3,
     "transactions": [],
 }
 blockchain = [genesis_block]
@@ -15,84 +20,92 @@ def get_last_blockchain_value():
     return blockchain[-1]
 
 
-def add_value(transaction_amount, last_transaction):
-    if last_transaction is None:
-        last_transaction = [1]
-    blockchain.append([last_transaction, transaction_amount])
-
-
-def get_user_input():
-    print("\n1: Add transaction")
-    print("2: Mine block")
-    print("3: Print transaction")
-    print("h: Manipulate the chain")
-    print("q: Exit")
-    return input("Your choice: ")
-
-
 def print_blockchain():
-    for index, transaction in enumerate(blockchain):
-        # print(f"{index} - {transaction}")
-        print(transaction)
-    print("-" * 20)
+    print("\nPrinting chains...")
+    for index, block in enumerate(blockchain):
+        print(f"index: {index} -> {block}")
+    print("\n")
 
 
 def add_transaction(recipient, sender=owner, amount=1.0):
-    open_transaction.append(
+    open_transactions.append(
         {"sender": sender, "recipient": recipient, "amount": amount}
+    )
+
+
+def hash_block(block):
+    return "".join(
+        [
+            tx.get("sender") + "-" + tx.get("recipient") + "-" + str(tx.get("amount"))
+            for tx in block.get("transactions")
+        ]
     )
 
 
 def mine_block():
     blockchain.append(
         {
-            "previous_hash": "+".join(blockchain[-1].values()),
+            "previous_hash": hash_block(blockchain[-1]),
             "index": len(blockchain),
-            "transactions": open_transactions,
+            "transactions": open_transactions.copy(),
         }
     )
+    open_transactions.clear()
+    print("\nOpen transactions mined.")
+    print(f"blockchain size: {len(blockchain)}")
 
 
 def manipulate_block():
     if len(blockchain) > 0:
-        blockchain[0] = [2]
+        blockchain[0] = fake_block
 
 
-# def verify_chain() -> bool:
-#     for index, block in enumerate(blockchain):
-#         if index == 0:
-#             continue
-#         # print(f"block[0]: {block[0]}, blockchain[index - 1]: {blockchain[index - 1]}")
-#         if block[0] != blockchain[index - 1]:
-#             return False
-#     return True
+def verify_chain() -> bool:
+    # print("Verifing chain...")
+    # print(f"blockchain size: {len(blockchain)}")
+
+    for index in range(1, len(blockchain)):
+        # print( f"index: {index}, previous_hash: {blockchain[index].get('previous_hash')}")
+        if hash_block(blockchain[index - 1]) != blockchain[index].get("previous_hash"):
+            return False
+    # print("Chain Ok\n")
+    return True
 
 
 def get_transaction_value():
-    tx_recipient = input("Recipient: ")
+    tx_recipient = input("\nRecipient: ")
     tx_amount = float(input("Transaction amount: "))
     return tx_recipient, tx_amount
+
+
+def get_user_input():
+    print("\nn: Add transaction")
+    print("m: Mine block")
+    print("p: Print blockchain")
+    print("h: Hack the chain")
+    print("q: Exit")
+    return input("Your choice: ")
 
 
 while True:
     choice = get_user_input()
     match choice:
-        case "1":
+        case "n":
             recipient, amount = get_transaction_value()
             add_transaction(recipient, amount=amount)
-            print(f"open_transaction: {open_transaction}")
-        case "2":
+            print(f"\nOpen transactions: {open_transactions}")
+        case "m":
             mine_block()
-        case "3":
+        case "p":
             print_blockchain()
         case "h":
             manipulate_block()
         case "q":
-            print("Done")
+            print("Quiting...")
             break
         case _:
             print("Invalid choice")
             continue
-    # if not verify_chain():
-    #     print("Invalid blockchain!")
-    #     break
+    if not verify_chain():
+        print("Corrupted blockchain!")
+        break
