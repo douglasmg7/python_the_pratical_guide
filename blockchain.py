@@ -7,11 +7,12 @@ genesis_block = {
 fake_block = {
     "previous_hash": "123",
     "index": 3,
-    "transactions": [],
+    "transactions": [{"sender": "Paulo", "recipient": "Maria", "amount": "34.5"}],
 }
 blockchain = [genesis_block]
 open_transactions = []
 owner = "douglas"
+participants = {owner}
 
 
 def get_last_blockchain_value():
@@ -31,6 +32,8 @@ def add_transaction(recipient, sender=owner, amount=1.0):
     open_transactions.append(
         {"sender": sender, "recipient": recipient, "amount": amount}
     )
+    participants.add(sender)
+    participants.add(recipient)
 
 
 def hash_block(block):
@@ -83,6 +86,7 @@ def get_user_input():
     print("m: Mine block")
     print("p: Print blockchain")
     print("h: Hack the chain")
+    print("s: Show participants")
     print("q: Exit")
     return input("Your choice: ")
 
@@ -100,6 +104,8 @@ while True:
             print_blockchain()
         case "h":
             manipulate_block()
+        case "s":
+            print(participants)
         case "q":
             print("Quiting...")
             break
