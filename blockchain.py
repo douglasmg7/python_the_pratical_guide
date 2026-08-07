@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+from typing import Final
+
+MINING_REWARD: Final[float] = 10
+
 genesis_block = {
     "previous_hash": None,
     "index": 0,
@@ -29,11 +33,35 @@ def print_blockchain():
 
 
 def add_transaction(recipient, sender=owner, amount=1.0):
-    open_transactions.append(
-        {"sender": sender, "recipient": recipient, "amount": amount}
-    )
-    participants.add(sender)
-    participants.add(recipient)
+    tx = {"sender": sender, "recipient": recipient, "amount": amount}
+    if verify_transaction(tx):
+        open_transactions.append(tx)
+        participants.add(sender)
+        participants.add(recipient)
+        return True
+    return False
+
+
+def get_balance(participant: str):
+    participant = participant.casefold()
+    balance = 0.0
+    for block in blockchain:
+        for tx in block["transactions"]:
+            if tx["sender"].casefold() == participant:
+                balance -= tx["amount"]
+            if tx["recipient"].casefold() == participant:
+                balance += tx["amount"]
+    for tx in open_transactions:
+        if tx["sender"].casefold() == participant:
+            balance -= tx["amount"]
+        if tx["recipient"].casefold() == participant:
+            balance += tx["amount"]
+    return balance
+
+
+def verify_transaction(tx) -> bool:
+    balance = get_balance(tx["sender"])
+    return balance >= tx["amount"]
 
 
 def hash_block(block):
@@ -46,6 +74,10 @@ def hash_block(block):
 
 
 def mine_block():
+    # Reward transaction.
+    open_transactions.append(
+        {"sender": "MINING", "recipient": owner, "amount": MINING_REWARD}
+    )
     blockchain.append(
         {
             "previous_hash": hash_block(blockchain[-1]),
@@ -87,6 +119,7 @@ def get_user_input():
     print("p: Print blockchain")
     print("h: Hack the chain")
     print("s: Show participants")
+    print("b: Get balance")
     print("q: Exit")
     return input("Your choice: ")
 
@@ -96,8 +129,12 @@ while True:
     match choice:
         case "n":
             recipient, amount = get_transaction_value()
-            add_transaction(recipient, amount=amount)
-            print(f"\nOpen transactions: {open_transactions}")
+            if add_transaction(recipient, amount=amount):
+                print("Transaction done")
+                print(f"\nOpen transactions: {open_transactions}")
+            else:
+                print("Transaction fail, no fund available.")
+
         case "m":
             mine_block()
         case "p":
@@ -106,6 +143,9 @@ while True:
             manipulate_block()
         case "s":
             print(participants)
+        case "b":
+            participant = str(input("Participant name: "))
+            print(f"Balance for {participant}: {get_balance(participant)}")
         case "q":
             print("Quiting...")
             break
