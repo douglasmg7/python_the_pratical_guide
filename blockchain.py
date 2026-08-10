@@ -74,18 +74,19 @@ def hash_block(block):
 
 
 def mine_block():
+    copied_open_transactions = open_transactions[:]
     # Reward transaction.
-    open_transactions.append(
+    copied_open_transactions.append(
         {"sender": "MINING", "recipient": owner, "amount": MINING_REWARD}
     )
     blockchain.append(
         {
             "previous_hash": hash_block(blockchain[-1]),
             "index": len(blockchain),
-            "transactions": open_transactions.copy(),
+            "transactions": copied_open_transactions,
         }
     )
-    open_transactions.clear()
+    # open_transactions.clear()
     print("\nOpen transactions mined.")
     print(f"blockchain size: {len(blockchain)}")
 
