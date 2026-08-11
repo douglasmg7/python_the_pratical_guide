@@ -114,6 +114,10 @@ def get_transaction_value():
     return tx_recipient, tx_amount
 
 
+def verify_transactions() -> bool:
+    return all(verify_transaction(tx) for tx in open_transactions)
+
+
 def get_user_input():
     print("\nn: Add transaction")
     print("m: Mine block")
@@ -121,6 +125,7 @@ def get_user_input():
     print("h: Hack the chain")
     print("s: Show participants")
     print("b: Get balance")
+    print("c: Check transactions validity")
     print("q: Exit")
     return input("Your choice: ")
 
@@ -147,6 +152,11 @@ while True:
         case "b":
             participant = str(input("Participant name: "))
             print(f"Balance for {participant}: {get_balance(participant)}")
+        case "c":
+            if verify_transactions():
+                print("\nAll transactions is valid")
+            else:
+                print("\nThe are invalid transactions")
         case "q":
             print("Quiting...")
             break
